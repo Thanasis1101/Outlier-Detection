@@ -38,7 +38,7 @@ object App {
     })
 
     val features = data.selectExpr("toVector(_c0, _c1) as feature")
-    val kmeans = new KMeans().setK(3).setFeaturesCol("feature").setPredictionCol("prediction")
+    val kmeans = new KMeans().setK(5).setFeaturesCol("feature").setPredictionCol("prediction")
     val model = kmeans.fit(features)
 
 
@@ -50,6 +50,36 @@ object App {
 
     //predicted.show(300)
 
+
+
+    spark.udf.register("calcDistance", (feature: org.apache.spark.ml.linalg.Vector, prediction: Int) => {
+      val current_cluster = model.clusterCenters.apply(prediction) // Find in which cluster the current point was predicted
+      Math.sqrt(Vectors.sqdist(feature, current_cluster))
+    })
+
+    val distances = predicted.selectExpr("feature", "prediction", "calcDistance(feature, prediction) as distance")
+
+    val cluster_averages = distances.groupBy("prediction").avg("distance").sort("prediction").select("avg(distance)").rdd.map(r => r(0)).collect()
+    val cluster_max = distances.groupBy("prediction").max("distance").sort("prediction").select("max(distance)").rdd.map(r => r(0)).collect()
+    val cluster_min = distances.groupBy("prediction").min("distance").sort("prediction").select("min(distance)").rdd.map(r => r(0)).collect()
+
+
+
+    spark.udf.register("calcClusterThreshold", (prediction: Int) => {
+      val current_cluster_average = cluster_averages.apply(prediction).asInstanceOf[Double]
+      val current_cluster_max = cluster_max.apply(prediction).asInstanceOf[Double]
+      val current_cluster_min = cluster_min.apply(prediction).asInstanceOf[Double]
+
+      current_cluster_average + (current_cluster_max + current_cluster_min)/2
+    })
+
+
+    val outliers = distances.selectExpr("feature", "prediction", "distance", "calcClusterThreshold(prediction) as cluster_threshold").filter(col("distance") > col("cluster_threshold"))
+outliers.show()
+    println(outliers.count())
+
+    /*
+
     val min_distance = 3000000.0
 
 
@@ -60,7 +90,7 @@ object App {
 
     val distances = predicted.selectExpr("calcDistance(feature, prediction) as distance")
     println(distances.filter(col("distance") > min_distance).count())
-
+  */
 
   }
 
