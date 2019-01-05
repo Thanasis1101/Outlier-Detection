@@ -1,10 +1,24 @@
-import org.apache.spark.sql.SparkSession
+import breeze.linalg._
+import org.apache.spark.SparkContext
+import org.apache.spark.ml.feature.{StandardScaler}
+import org.apache.spark.ml.linalg.{Vectors, Vector, Matrix}
+import org.apache.spark.mllib.stat.Statistics
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.functions._
 import org.apache.spark.ml.clustering.KMeans
-import org.apache.spark.ml.linalg.Vectors
+import org.apache.spark.ml.stat.Correlation
+
+/*
+import breeze.linalg.{DenseVector, inv}
+import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.ml.clustering.KMeans
+import org.apache.spark.ml.feature.{StandardScaler, VectorAssembler}
+import org.apache.spark.ml.linalg.{Vectors}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.functions.col
-
-import scala.collection.mutable.ArrayBuffer
+import org.apache.spark.mllib.stat.Statistics
+import org.apache.spark.mllib.util.MLUtils
+*/
 
 object App {
 
@@ -51,6 +65,10 @@ object App {
     //predicted.show(300)
 
 
+    /*
+
+    // ============= METHOD A
+
 
     spark.udf.register("calcDistance", (feature: org.apache.spark.ml.linalg.Vector, prediction: Int) => {
       val current_cluster = model.clusterCenters.apply(prediction) // Find in which cluster the current point was predicted
@@ -75,7 +93,7 @@ object App {
 
 
     val outliers = distances.selectExpr("feature", "prediction", "distance", "calcClusterThreshold(prediction) as cluster_threshold").filter(col("distance") > col("cluster_threshold"))
-outliers.show()
+    outliers.show()
     println(outliers.count())
 
     /*
@@ -90,7 +108,90 @@ outliers.show()
 
     val distances = predicted.selectExpr("calcDistance(feature, prediction) as distance")
     println(distances.filter(col("distance") > min_distance).count())
-  */
+    */
+
+    */
+
+    // =============== METHOD B
+
+
+    var clustersArray = new Array[DataFrame](5)
+
+    clustersArray(0) = predicted.filter(col("prediction") === 0)
+    clustersArray(1) = predicted.filter(col("prediction") === 1)
+    clustersArray(2) = predicted.filter(col("prediction") === 2)
+    clustersArray(3) = predicted.filter(col("prediction") === 3)
+    clustersArray(4) = predicted.filter(col("prediction") === 4)
+
+
+    def calcMahalanobis(df: DataFrame, inputCol: String): DataFrame = {
+      val Row(coeff1: Matrix) = Correlation.corr(df, inputCol).head
+
+      val invCovariance = inv(new breeze.linalg.DenseMatrix(2, 2, coeff1.toArray))
+
+      val mahalanobis = udf[Double, Vector] { v =>
+        val vB = DenseVector(v.toArray)
+        vB.t * invCovariance * vB
+      }
+
+      df.withColumn("mahalanobis", mahalanobis(df(inputCol)))
+    }
+
+    def stddev(xs: scala.collection.immutable.List[Double], avg: Double): Double = xs match {
+      case Nil => 0.0
+      case ys => math.sqrt((0.0 /: ys) {
+        (a,e) => a + math.pow(e - avg, 2.0)
+      } / xs.size)
+    }
+
+    var i=0
+
+    for (cluster <- clustersArray){
+
+
+
+      // Standardize the df2: This is important step in calculating mahalanobis distance.
+      // When normalized to zero mean and unit standard deviation then correlation matrix is equal to covariance matrix
+
+      val standardScalar = new StandardScaler().setInputCol("feature").setOutputCol("scaledFeat").setWithMean(true).setWithStd(true)
+      val scalarModel = standardScalar.fit(cluster.select("feature"))
+      val clusterScaled = scalarModel.transform(cluster).select("feature", "scaledFeat")
+
+
+      val clusterWithMahalanobis = calcMahalanobis(clusterScaled, "scaledFeat")
+
+      //clusterWithMahalanobis.sort(col("mahalanobis").desc).show(10000)
+
+      val mahalanobis_avg = clusterWithMahalanobis.select(avg("mahalanobis")).first().get(0).asInstanceOf[Double]
+      val mahalanobis_stddev = clusterWithMahalanobis.agg(stddev_pop(col("mahalanobis"))).first().get(0).asInstanceOf[Double]
+
+
+      val isOutlier = udf[Boolean, Double] { mahalanobis =>
+        mahalanobis > mahalanobis_avg + 2*mahalanobis_stddev
+      }
+
+      val clusterWithIsOutlier = clusterWithMahalanobis.withColumn("is_outlier", isOutlier(clusterWithMahalanobis("mahalanobis")))
+
+
+      println("Average: " + mahalanobis_avg)
+      println("Std dev: " + mahalanobis_stddev)
+
+
+      spark.udf.register("getX", (vector: Vector) => {
+        vector.apply(0)
+      })
+      spark.udf.register("getY", (vector: Vector) => {
+        vector.apply(1)
+      })
+
+      val output = clusterWithIsOutlier.selectExpr("getX(feature) as X", "getY(feature) as Y", "is_outlier")
+      output.write.format("com.databricks.spark.csv").save("cluster"+i+".csv")
+
+      i+=1
+
+    }
+
+
 
   }
 
