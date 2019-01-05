@@ -1,24 +1,10 @@
 import breeze.linalg._
-import org.apache.spark.SparkContext
-import org.apache.spark.ml.feature.{StandardScaler}
+import org.apache.spark.ml.feature.StandardScaler
 import org.apache.spark.ml.linalg.{Vectors, Vector, Matrix}
-import org.apache.spark.mllib.stat.Statistics
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.stat.Correlation
-
-/*
-import breeze.linalg.{DenseVector, inv}
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.ml.clustering.KMeans
-import org.apache.spark.ml.feature.{StandardScaler, VectorAssembler}
-import org.apache.spark.ml.linalg.{Vectors}
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.functions.col
-import org.apache.spark.mllib.stat.Statistics
-import org.apache.spark.mllib.util.MLUtils
-*/
 
 object App {
 
@@ -165,7 +151,7 @@ object App {
 
       val standardScalar = new StandardScaler().setInputCol("feature").setOutputCol("scaledFeat").setWithMean(true).setWithStd(true)
       val scalarModel = standardScalar.fit(cluster.select("feature"))
-      val clusterScaled = scalarModel.transform(cluster).select("feature", "scaledFeat")
+      val clusterScaled = scalarModel.transform(cluster).select("feature", "scaledFeat", "prediction")
 
 
       val clusterWithMahalanobis = calcMahalanobis(clusterScaled, "scaledFeat")
@@ -188,7 +174,7 @@ object App {
 
 
 
-      val output = clusterWithIsOutlier.selectExpr("getX(feature) as X", "getY(feature) as Y", "is_outlier")
+      val output = clusterWithIsOutlier.selectExpr("getX(feature) as X", "getY(feature) as Y", "prediction", "is_outlier")
       output.write.format("com.databricks.spark.csv").save("cluster"+i+".csv")
 
 
