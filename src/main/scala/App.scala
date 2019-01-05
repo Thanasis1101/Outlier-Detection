@@ -146,6 +146,16 @@ object App {
 
     var i=0
 
+    var outlier_counter = 0
+
+
+    spark.udf.register("getX", (vector: Vector) => {
+      vector.apply(0)
+    })
+    spark.udf.register("getY", (vector: Vector) => {
+      vector.apply(1)
+    })
+
     for (cluster <- clustersArray){
 
 
@@ -177,19 +187,20 @@ object App {
       println("Std dev: " + mahalanobis_stddev)
 
 
-      spark.udf.register("getX", (vector: Vector) => {
-        vector.apply(0)
-      })
-      spark.udf.register("getY", (vector: Vector) => {
-        vector.apply(1)
-      })
 
       val output = clusterWithIsOutlier.selectExpr("getX(feature) as X", "getY(feature) as Y", "is_outlier")
       output.write.format("com.databricks.spark.csv").save("cluster"+i+".csv")
 
+
+      outlier_counter += output.filter(col("is_outlier") === true).count().asInstanceOf[Int]
+
+
+
       i+=1
 
     }
+
+    println(outlier_counter)
 
 
 
