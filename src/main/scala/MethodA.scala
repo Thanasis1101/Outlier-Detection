@@ -48,11 +48,29 @@ object MethodA {
       val current_cluster_center = model.clusterCenters.apply(cluster_id) // Find the center of the cluster the current point was predicted
       Math.sqrt(Vectors.sqdist(feature, current_cluster_center))
     })
-    val distances = predicted.selectExpr("feature", "cluster_id", "calcDistance(scaled_features, cluster_id) as distance")
+    val distances = predicted.selectExpr("feature", "cluster_id", "scaled_features", "calcDistance(scaled_features, cluster_id) as distance")
 
     // Calculate the average and the standard deviation for every cluster's distances
     val cluster_averages = distances.groupBy("cluster_id").avg("distance").sort("cluster_id").select("avg(distance)").rdd.map(r => r(0)).collect()
     val cluster_stddev = distances.groupBy("cluster_id").agg(stddev_pop(col("distance"))).sort("cluster_id").select("stddev_pop(distance)").rdd.map(r => r(0)).collect()
+
+
+    /*
+    println(model.clusterCenters.apply(0))
+    println(cluster_averages.apply(0).asInstanceOf[Double] + 2 * cluster_stddev.apply(0).asInstanceOf[Double])
+
+    println(model.clusterCenters.apply(1))
+    println(cluster_averages.apply(1).asInstanceOf[Double] + 2 * cluster_stddev.apply(1).asInstanceOf[Double])
+
+    println(model.clusterCenters.apply(2))
+    println(cluster_averages.apply(2).asInstanceOf[Double] + 2 * cluster_stddev.apply(2).asInstanceOf[Double])
+
+    println(model.clusterCenters.apply(3))
+    println(cluster_averages.apply(3).asInstanceOf[Double] + 2 * cluster_stddev.apply(3).asInstanceOf[Double])
+
+    println(model.clusterCenters.apply(4))
+    println(cluster_averages.apply(4).asInstanceOf[Double] + 2 * cluster_stddev.apply(4).asInstanceOf[Double])
+    */
 
 
     // Decide whether a point is outlier depending on if the euclidean distance
@@ -61,6 +79,7 @@ object MethodA {
       val current_cluster_average = cluster_averages.apply(cluster_id).asInstanceOf[Double]
       val current_cluster_stddev = cluster_stddev.apply(cluster_id).asInstanceOf[Double]
       val threshold = current_cluster_average + 2 * current_cluster_stddev
+
 
       distance > threshold // return true if distance is bigger than threshold, false otherwise
     })
