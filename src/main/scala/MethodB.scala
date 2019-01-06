@@ -74,9 +74,19 @@ object MethodB {
     var outlier_counter = 0
     for (cluster_id <- 0 until numOfClusters) { // cluster_id = 0,1,2,3,4
 
-      // find the rows of points that belong to the current cluster and add the mahalanobis column
+
+      // find the rows of points that belong to the current cluster
       val cluster = predicted.filter(col("cluster_id") === cluster_id)
-      val clusterWithMahalanobis = calcMahalanobis(cluster, "scaled_features")
+
+
+      // Standardize features of cluster with average = 0 and standard deviation = 1
+      val standardScalar = new StandardScaler().setInputCol("feature").setOutputCol("scaled_features2").setWithMean(true).setWithStd(true)
+      val scalarModel = standardScalar.fit(cluster.select("feature"))
+      val clusterScaled = scalarModel.transform(cluster).select("feature", "scaled_features2", "cluster_id")
+
+
+      //  Add the mahalanobis column
+      val clusterWithMahalanobis = calcMahalanobis(clusterScaled, "scaled_features2")
 
 
       // Calculate the average and the standard deviation of the current cluster

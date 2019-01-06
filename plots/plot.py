@@ -20,7 +20,6 @@ plt.ylabel("y")
 plt.plot(x,y,'go')
 plt.show()
 
-#meta to clustercccccccccccing
 data = open("/home/thanasis/Scala/outliers_detection/results/Method B/" + "results"+ ".csv")
 
 clusters = []
@@ -40,7 +39,6 @@ plt.ylabel("y")
 colors=[ 'r','b','g','y','c']
 i=0
 for cluster in clusters:
-	print len(cluster[0])
 	plt.plot(cluster[0],cluster[1],colors[i]+'o')
 	i+=1
 plt.show()

@@ -2,7 +2,7 @@ import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.feature.StandardScaler
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object MethodA {
 
@@ -21,7 +21,7 @@ object MethodA {
     // convert the first two columns of input to a vector
     // replace deficient columns with the average of the column
     spark.udf.register("toVector", (a: Object, b: Object) => {
-      if (a==null || b == null) {
+      if (a == null || b == null) {
         Vectors.dense(c0_avg, c1_avg)
       } else {
         Vectors.dense(a.asInstanceOf[Double], b.asInstanceOf[Double])
@@ -42,6 +42,7 @@ object MethodA {
     val model = kmeans.fit(dataScaled)
     val predicted = model.transform(dataScaled)
 
+
     // Calculate euclidean distance between every point and the center of the cluster where the point belongs
     spark.udf.register("calcDistance", (feature: Vector, cluster_id: Int) => {
       val current_cluster_center = model.clusterCenters.apply(cluster_id) // Find the center of the cluster the current point was predicted
@@ -59,7 +60,7 @@ object MethodA {
     spark.udf.register("isOutlier", (distance: Double, cluster_id: Int) => {
       val current_cluster_average = cluster_averages.apply(cluster_id).asInstanceOf[Double]
       val current_cluster_stddev = cluster_stddev.apply(cluster_id).asInstanceOf[Double]
-      val threshold = current_cluster_average + 2*current_cluster_stddev
+      val threshold = current_cluster_average + 2 * current_cluster_stddev
 
       distance > threshold // return true if distance is bigger than threshold, false otherwise
     })
