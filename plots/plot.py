@@ -20,7 +20,7 @@ plt.plot(x,y,'go')
 plt.show()
 
 # clusters
-data = open("/home/thanasis/Scala/outliers_detection/results/Method A/" + "results"+ ".csv")
+data = open("/home/thanasis/Scala/outliers_detection/results/Method A1/" + "results"+ ".csv")
 
 clusters = []
 for i in range(5):
@@ -45,7 +45,7 @@ plt.show()
 
 
 # centers and circles
-data = open("/home/thanasis/Scala/outliers_detection/results/Method A/" + "results_scaled"+ ".csv")
+data = open("/home/thanasis/Scala/outliers_detection/results/Method A1/" + "results_scaled"+ ".csv")
 
 centers = [[1.099180859665593,1.0851321460091121],
 	[-1.0959456410773094,-1.0852360927261495],
@@ -82,7 +82,7 @@ plt.show()
 
 # with circles
 plt.figure(1)
-plt.title("Clusters (with centers and threshold)")
+plt.title("Clusters - Method A1 (with centers and threshold)")
 plt.xlabel("x")
 plt.ylabel("y")
 colors=[ 'r','b','g','y','c']
@@ -95,7 +95,7 @@ for cluster in clusters:
 plt.show()
 
 # circles+outliers
-data = open("/home/thanasis/Scala/outliers_detection/results/Method A/" + "results_scaled" + ".csv")
+data = open("/home/thanasis/Scala/outliers_detection/results/Method A1/" + "results_scaled" + ".csv")
 x,y = [] , []
 out_x , out_y = [] , []
 for line in data:
@@ -109,7 +109,7 @@ for line in data:
 			out_y.append(float(d[1]))
 
 plt.figure(1)
-plt.title("Outliers - Method A (with centers and threshold)")
+plt.title("Outliers - Method A1 (with centers and threshold)")
 plt.xlabel("x")
 plt.ylabel("y")
 plt.plot(x,y,'go')
@@ -124,8 +124,79 @@ plt.show()
 
 
 
-# outliers - method a
-data = open("/home/thanasis/Scala/outliers_detection/results/Method A/" + "results" + ".csv")
+# outliers - method a1
+data = open("/home/thanasis/Scala/outliers_detection/results/Method A1/" + "results" + ".csv")
+x,y = [] , []
+out_x , out_y = [] , []
+for line in data:
+	d = line.split(",")
+	if (len(d) ==4) and (d[1] not in ('')) and (d[0] not in ('')):
+		if  d[3] == "false\n":
+			x.append(float(d[0]))
+			y.append(float(d[1]))
+		else:
+			out_x.append(float(d[0]))
+			out_y.append(float(d[1]))
+
+plt.figure(1)
+plt.title("Outliers - Method A1 (1930 outliers)")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(x,y,'go')
+plt.plot(out_x,out_y,'ro')
+plt.show()
+
+
+# outliers - method a2
+data = open("/home/thanasis/Scala/outliers_detection/results/Method A2/" + "results" + ".csv")
+x,y = [] , []
+out_x , out_y = [] , []
+for line in data:
+	d = line.split(",")
+	if (len(d) ==4) and (d[1] not in ('')) and (d[0] not in ('')):
+		if  d[3] == "false\n":
+			x.append(float(d[0]))
+			y.append(float(d[1]))
+		else:
+			out_x.append(float(d[0]))
+			out_y.append(float(d[1]))
+
+plt.figure(1)
+plt.title("Outliers - Method A2 (2500 outliers)")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(x,y,'go')
+plt.plot(out_x,out_y,'ro')
+plt.show()
+
+
+
+
+# outliers - method b
+data = open("/home/thanasis/Scala/outliers_detection/results/Method B/" + "results" + ".csv")
+x,y = [] , []
+out_x , out_y = [] , []
+for line in data:
+	d = line.split(",")
+	if (len(d) ==3) and (d[1] not in ('')) and (d[0] not in ('')):
+		if  d[2] == "false\n":
+			x.append(float(d[0]))
+			y.append(float(d[1]))
+		else:
+			out_x.append(float(d[0]))
+			out_y.append(float(d[1]))
+
+plt.figure(1)
+plt.title("Outliers - Method B (4310 outliers)")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(x,y,'go')
+plt.plot(out_x,out_y,'ro')
+plt.show()
+
+# compare
+# outliers - method a1
+data = open("/home/thanasis/Scala/outliers_detection/results/Method A1/" + "results" + ".csv")
 x,y = [] , []
 out_x , out_y = [] , []
 for line in data:
@@ -139,16 +210,16 @@ for line in data:
 			out_y.append(float(d[1]))
 
 fig = plt.figure(1)
-fig.add_subplot(121) 
-plt.title("Outliers - Method A")
+fig.add_subplot(131) 
+plt.title("Outliers - Method A1 (1930 outliers)")
 plt.xlabel("x")
 plt.ylabel("y")
 plt.plot(x,y,'go')
 plt.plot(out_x,out_y,'ro')
 
 
-# outliers - method b
-data = open("/home/thanasis/Scala/outliers_detection/results/Method B/" + "results" + ".csv")
+# outliers - method a2
+data = open("/home/thanasis/Scala/outliers_detection/results/Method A2/" + "results" + ".csv")
 x,y = [] , []
 out_x , out_y = [] , []
 for line in data:
@@ -162,10 +233,34 @@ for line in data:
 			out_y.append(float(d[1]))
 
 #plt.figure(1)
-fig.add_subplot(122)
-plt.title("Outliers - Method B")
+fig.add_subplot(132)
+plt.title("Outliers - Method A2 (2500 outliers)")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(x,y,'go')
+plt.plot(out_x,out_y,'ro')
+
+
+# outliers - method b
+data = open("/home/thanasis/Scala/outliers_detection/results/Method B/" + "results" + ".csv")
+x,y = [] , []
+out_x , out_y = [] , []
+for line in data:
+	d = line.split(",")
+	if (len(d) ==3) and (d[1] not in ('')) and (d[0] not in ('')):
+		if  d[2] == "false\n":
+			x.append(float(d[0]))
+			y.append(float(d[1]))
+		else:
+			out_x.append(float(d[0]))
+			out_y.append(float(d[1]))
+
+#plt.figure(1)
+fig.add_subplot(133)
+plt.title("Outliers - Method B (4310 outliers)")
 plt.xlabel("x")
 plt.ylabel("y")
 plt.plot(x,y,'go')
 plt.plot(out_x,out_y,'ro')
 plt.show()
+

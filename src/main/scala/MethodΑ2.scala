@@ -6,7 +6,7 @@ import org.apache.spark.ml.stat.Correlation
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.functions._
 
-object MethodB {
+object MethodΑ2 {
 
   def main(args: Array[String]): Unit = {
 
@@ -82,7 +82,7 @@ object MethodB {
       // Standardize features of cluster with average = 0 and standard deviation = 1
       val standardScalar = new StandardScaler().setInputCol("feature").setOutputCol("scaled_features2").setWithMean(true).setWithStd(true)
       val scalarModel = standardScalar.fit(cluster.select("feature"))
-      val clusterScaled = scalarModel.transform(cluster).select("feature", "scaled_features2", "cluster_id")
+      val clusterScaled = scalarModel.transform(cluster).select("feature", "scaled_features", "scaled_features2", "cluster_id")
 
 
       //  Add the mahalanobis column
@@ -114,6 +114,7 @@ object MethodB {
 
     }
 
+    // print how many outliers were found
     println("Number of outliers: " + outlier_counter)
 
 

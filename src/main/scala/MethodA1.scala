@@ -4,7 +4,7 @@ import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object MethodA {
+object MethodA1 {
 
   def main(args: Array[String]): Unit = {
 
@@ -58,16 +58,12 @@ object MethodA {
     /*
     println(model.clusterCenters.apply(0))
     println(cluster_averages.apply(0).asInstanceOf[Double] + 2 * cluster_stddev.apply(0).asInstanceOf[Double])
-
     println(model.clusterCenters.apply(1))
     println(cluster_averages.apply(1).asInstanceOf[Double] + 2 * cluster_stddev.apply(1).asInstanceOf[Double])
-
     println(model.clusterCenters.apply(2))
     println(cluster_averages.apply(2).asInstanceOf[Double] + 2 * cluster_stddev.apply(2).asInstanceOf[Double])
-
     println(model.clusterCenters.apply(3))
     println(cluster_averages.apply(3).asInstanceOf[Double] + 2 * cluster_stddev.apply(3).asInstanceOf[Double])
-
     println(model.clusterCenters.apply(4))
     println(cluster_averages.apply(4).asInstanceOf[Double] + 2 * cluster_stddev.apply(4).asInstanceOf[Double])
     */
@@ -96,7 +92,10 @@ object MethodA {
     output.write.format("com.databricks.spark.csv").save("results.csv")
 
 
-    // print how many outliers where found
+    // print how many outliers per cluster were found
+    //output.filter(col("is_outlier") === true).groupBy("cluster_id").count().show()
+
+    // print how many outliers were found
     val outlier_counter = output.filter(col("is_outlier") === true).count().asInstanceOf[Int]
     println("Number of outliers: " + outlier_counter)
 
