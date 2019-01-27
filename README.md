@@ -1,4 +1,4 @@
-# Outlier-Detection
+# Outlier Detection
 Outlier detection implementations in Scala using Spark for a [2D dataset](src/main/resources/data.csv).
 
 **[Method A1](src/main/scala/MethodA1.scala)**: Kmeans and euclidean distance  
